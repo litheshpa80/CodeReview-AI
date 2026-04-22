@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Header, HTTPException, Depends
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import hmac
@@ -28,12 +29,8 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {
-        "status": "ok",
-        "service": "CodeReview AI webhook listener",
-        "docs": "/docs",
-        "health": "/health",
-    }
+    dashboard_url = os.getenv("DASHBOARD_URL", "/docs")
+    return RedirectResponse(url=dashboard_url, status_code=307)
 
 
 @app.get("/health")
