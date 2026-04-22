@@ -1,0 +1,22 @@
+name: CodeReview AI - Auto Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Notify CodeReview AI
+        run: |
+          curl -X POST "https://your-backend-api.com/webhook" \
+            -H "X-GitHub-Event: pull_request" \
+            -H "X-Hub-Signature-256: sha256=${{ secrets.WEBHOOK_SECRET_HMAC }}" \
+            -H "Content-Type: application/json" \
+            -d @$GITHUB_EVENT_PATH

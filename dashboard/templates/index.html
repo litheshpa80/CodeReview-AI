@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeReview AI | Review Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <div class="topbar-main">
+                <div class="brand-block">
+                    <div class="brand-mark">CR</div>
+                    <div>
+                        <p class="eyebrow">Code Review Intelligence</p>
+                        <h1 class="brand-name">CodeReview AI</h1>
+                    </div>
+                </div>
+                <div class="topbar-copy">
+                    <p class="eyebrow">Dashboard</p>
+                    <h2 class="topbar-title">A simpler view of review quality, backlog pressure, and scan activity.</h2>
+                </div>
+            </div>
+            <div class="topbar-meta">
+                <div class="meta-pill status-pill">
+                    <span class="status-dot"></span>
+                    <div>
+                        <span class="meta-label">Status</span>
+                        <strong>System online</strong>
+                    </div>
+                </div>
+                <div class="meta-pill">
+                    <span class="meta-label">Refresh</span>
+                    <strong>30 seconds</strong>
+                </div>
+                <div class="meta-pill">
+                    <span class="meta-label">Local time</span>
+                    <strong id="current-time">--:--:--</strong>
+                </div>
+            </div>
+        </header>
+
+        <nav class="section-nav" aria-label="Primary">
+            <button class="nav-link active" data-target="overview-section" type="button">Overview</button>
+            <button class="nav-link" data-target="prs-section" type="button">Pull Requests</button>
+            <button class="nav-link" data-target="bulk-scan-section" type="button">Bulk Scan</button>
+            <button class="nav-link" data-target="settings-section" type="button">Settings</button>
+        </nav>
+
+        <main class="main-shell">
+            <section id="overview-section" class="tab-content active">
+                <section class="hero-panel">
+                    <div class="hero-copy">
+                        <p class="eyebrow">Overview</p>
+                        <h3>Track review quality without forcing the team through noise.</h3>
+                        <p class="hero-text">
+                            This dashboard keeps the signal front and center: queue size, severity trends, review coverage, and the pull requests that need attention first.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn-primary jump-link" data-target="prs-section" type="button">Open review queue</button>
+                            <button class="btn-secondary jump-link" data-target="bulk-scan-section" type="button">Run bulk scan</button>
+                        </div>
+                    </div>
+
+                    <div class="hero-visual" aria-hidden="true">
+                        <div class="visual-card">
+                            <span class="visual-label">Review health</span>
+                            <strong id="hero-coverage">0%</strong>
+                            <span class="visual-detail">Coverage across tracked pull requests</span>
+                        </div>
+                        <div class="visual-rail">
+                            <div class="rail-step active">
+                                <span></span>
+                                <div>
+                                    <strong>Collect</strong>
+                                    <p>Metrics, stats, and PR data</p>
+                                </div>
+                            </div>
+                            <div class="rail-step">
+                                <span></span>
+                                <div>
+                                    <strong>Prioritize</strong>
+                                    <p>Surface the highest-risk reviews</p>
+                                </div>
+                            </div>
+                            <div class="rail-step">
+                                <span></span>
+                                <div>
+                                    <strong>Act</strong>
+                                    <p>Inspect findings and trigger scans</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="stats-grid">
+                    <article class="metric-card metric-accent">
+                        <p class="eyebrow">Tracked PRs</p>
+                        <h4 id="total-prs">0</h4>
+                        <span class="metric-detail">Pull requests currently available in the dashboard.</span>
+                    </article>
+                    <article class="metric-card">
+                        <p class="eyebrow">Reviews completed</p>
+                        <h4 id="total-reviews">0</h4>
+                        <span class="metric-detail">AI review runs successfully recorded.</span>
+                    </article>
+                    <article class="metric-card">
+                        <p class="eyebrow">Critical findings</p>
+                        <h4 id="critical-findings">0</h4>
+                        <span class="metric-detail">Issues that need immediate review attention.</span>
+                    </article>
+                    <article class="metric-card">
+                        <p class="eyebrow">Total findings</p>
+                        <h4 id="total-findings">0</h4>
+                        <span class="metric-detail">All low, medium, and critical observations combined.</span>
+                    </article>
+                </section>
+
+                <section class="overview-grid">
+                    <article class="panel chart-panel trend-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Trend</p>
+                                <h4>Findings over time</h4>
+                            </div>
+                            <span class="panel-badge">Live metrics</span>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="bugTrendChart"></canvas>
+                        </div>
+                    </article>
+
+                    <article class="panel chart-panel severity-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Distribution</p>
+                                <h4>Severity mix</h4>
+                            </div>
+                            <span class="panel-badge">Current review output</span>
+                        </div>
+                        <div class="chart-wrap chart-wrap-compact">
+                            <canvas id="severityChart"></canvas>
+                        </div>
+                    </article>
+
+                    <article class="panel watchlist-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Watchlist</p>
+                                <h4>Priority pull requests</h4>
+                            </div>
+                            <span class="panel-badge">Top 4</span>
+                        </div>
+                        <div id="review-watchlist" class="watchlist"></div>
+                    </article>
+
+                    <article class="panel summary-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Snapshot</p>
+                                <h4>Operational summary</h4>
+                            </div>
+                        </div>
+                        <div class="summary-list">
+                            <div class="summary-item">
+                                <span class="summary-label">Critical pressure</span>
+                                <strong id="hero-critical">0</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Review coverage</span>
+                                <strong id="hero-coverage-secondary">0%</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Bulk scan endpoint</span>
+                                <strong>localhost:8000/api/bulk-scan</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Connected feeds</span>
+                                <strong>/api/metrics, /api/stats, /api/prs</strong>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+            </section>
+
+            <section id="prs-section" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Pull requests</p>
+                        <h3>Review archive</h3>
+                    </div>
+                    <div class="section-meta">
+                        <span class="meta-pill">
+                            <span class="meta-label">Queue size</span>
+                            <strong id="pr-count-pill">0 PRs</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="panel table-panel">
+                    <table id="pr-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Repository</th>
+                                <th>Status</th>
+                                <th>Findings</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pr-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="bulk-scan-section" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Bulk scan</p>
+                        <h3>Launch background repository analysis</h3>
+                    </div>
+                </div>
+
+                <div class="bulk-layout">
+                    <article class="panel bulk-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Launch</p>
+                                <h4>Start repository analysis</h4>
+                            </div>
+                        </div>
+                        <p class="panel-copy">
+                            Submit a GitHub token and let the backend process repositories asynchronously. New review records will appear in the queue as results arrive.
+                        </p>
+                        <div class="input-group">
+                            <label for="github-token">GitHub Personal Access Token</label>
+                            <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+                        </div>
+                        <div class="scan-actions">
+                            <button id="start-bulk-scan-btn" class="btn-primary" type="button">Start bulk scan</button>
+                            <div id="scan-status" class="scan-status hidden">
+                                <div class="spinner"></div>
+                                <p>Scan request sent. The backend is processing repositories in the background.</p>
+                            </div>
+                        </div>
+                        <div id="scan-feedback" class="scan-feedback hidden" role="status" aria-live="polite"></div>
+                    </article>
+
+                    <article class="panel guidance-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow">Guidance</p>
+                                <h4>Recommended workflow</h4>
+                            </div>
+                        </div>
+                        <div class="guidance-list">
+                            <div class="guidance-item">
+                                <strong>1. Start with a scoped token</strong>
+                                <p>Use repository read access only when possible.</p>
+                            </div>
+                            <div class="guidance-item">
+                                <strong>2. Keep the queue open</strong>
+                                <p>The review archive refreshes automatically every 30 seconds.</p>
+                            </div>
+                            <div class="guidance-item">
+                                <strong>3. Inspect findings first</strong>
+                                <p>Use the feedback modal to review comments and suggested fixes.</p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="settings-section" class="tab-content">
+                <div class="section-header">
+                    <div>
+                        <p class="eyebrow">Settings</p>
+                        <h3>Configuration notes</h3>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <article class="panel settings-card">
+                        <p class="eyebrow">Environment</p>
+                        <h4>.env managed configuration</h4>
+                        <p>API keys, webhook secrets, and provider settings remain managed through the root <code>.env</code> file.</p>
+                    </article>
+                    <article class="panel settings-card">
+                        <p class="eyebrow">Scope</p>
+                        <h4>Backend preserved</h4>
+                        <p>This redesign updates only the dashboard experience. Existing Flask routes and backend API contracts are unchanged.</p>
+                    </article>
+                    <article class="panel settings-card">
+                        <p class="eyebrow">Refresh model</p>
+                        <h4>Live operational polling</h4>
+                        <p>The frontend fetches metrics, stats, and pull request data every 30 seconds to keep the dashboard current.</p>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="feedback-modal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop" data-close-modal="true"></div>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button class="close-modal" type="button" aria-label="Close feedback modal">&times;</button>
+            <div class="modal-header">
+                <p class="eyebrow">Pull request feedback</p>
+                <h2 id="modal-title">AI findings</h2>
+                <p id="modal-pr-meta" class="modal-meta"></p>
+            </div>
+            <div id="modal-feedback-body" class="modal-feedback-body"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
