@@ -25,6 +25,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "CodeReview AI webhook listener",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
+
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "supersecret")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 llm_engine = LLMEngine(provider=os.getenv("LLM_PROVIDER", "openai"))
